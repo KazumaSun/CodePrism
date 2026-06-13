@@ -1,8 +1,8 @@
 # CodePrism
 
-**MAGI-style 3-agent dev orchestrator for Cursor** — run Melchior, Balthasar, and Caspar in parallel git worktrees, cross-review each other's work, and synthesize a single plan.
+**3-agent parallel dev orchestrator for Cursor** — run Melchior, Balthasar, and Caspar in parallel git worktrees, cross-review each other's work, and synthesize a single plan.
 
-Inspired by the three MAGI supercomputers (correctness, diversity of approach, and operational wisdom), CodePrism splits implementation concerns across three personas before merging insight through a designated rapporteur.
+Each agent focuses on a complementary dimension (correctness, maintainability, and operational efficiency). CodePrism splits implementation concerns across three personas before merging insight through a designated rapporteur.
 
 ## Concept
 

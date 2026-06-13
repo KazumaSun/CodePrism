@@ -27,7 +27,7 @@ source "${CODEPRISM_ROOT}/lib/task.sh"
 
 usage() {
   cat <<USAGE
-CodePrism — MAGI-style 3-agent dev orchestrator for Cursor
+CodePrism — 3-agent parallel dev orchestrator for Cursor
 
 Usage: codeprism <command> [options]
 

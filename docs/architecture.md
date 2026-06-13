@@ -1,6 +1,6 @@
 # CodePrism Architecture
 
-CodePrism orchestrates three persona-driven agents (Melchior, Balthasar, Caspar) in a MAGI-style pipeline inside Cursor-capable environments.
+CodePrism orchestrates three persona-driven agents (Melchior, Balthasar, Caspar) in a parallel multi-agent pipeline inside Cursor-capable environments.
 
 ## Components
 
