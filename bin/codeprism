@@ -22,6 +22,8 @@ source "${CODEPRISM_ROOT}/lib/review.sh"
 source "${CODEPRISM_ROOT}/lib/synthesize.sh"
 # shellcheck source=lib/apply.sh
 source "${CODEPRISM_ROOT}/lib/apply.sh"
+# shellcheck source=lib/task.sh
+source "${CODEPRISM_ROOT}/lib/task.sh"
 
 usage() {
   cat <<USAGE
@@ -47,6 +49,8 @@ Options:
   --repo <path>     Target git repository (default: cwd)
   --base <branch>   Base branch for worktrees (default: main)
   --task <text>     Task description (run/implement)
+  --task-file <path>  Load task from .md or .yaml (see examples/tasks/)
+  -f <path>         Shorthand for --task-file
   --strategy <s>    apply: cherry-pick | merge (default: cherry-pick)
   --agent <name>    apply: melchior | balthasar | caspar
   -h, --help        Show this help
@@ -87,6 +91,10 @@ cmd_init() {
   if [[ ! -f "${repo}/.codeprism.yaml" ]]; then
     cp "${CODEPRISM_ROOT}/.codeprism.example.yaml" "${repo}/.codeprism.yaml"
     log_info "Wrote ${repo}/.codeprism.yaml"
+  fi
+  if [[ ! -f "${repo}/.codeprism/task.yaml" && ! -f "${repo}/.codeprism/task.md" ]]; then
+    cp "${CODEPRISM_ROOT}/examples/tasks/.codeprism.task.example.yaml" "${repo}/.codeprism/task.yaml"
+    log_info "Wrote ${repo}/.codeprism/task.yaml (edit and run: codeprism run --repo .)"
   fi
   log_info "Initialized CodePrism in $repo"
 }
@@ -151,6 +159,8 @@ main() {
   SESSION_ARG=""
   BASE_BRANCH="${BASE_BRANCH:-main}"
   TASK_TEXT=""
+  TASK_FILE=""
+  BASE_BRANCH_EXPLICIT=0
   APPLY_STRATEGY="cherry-pick"
   APPLY_AGENT="melchior"
 
@@ -175,10 +185,15 @@ main() {
         ;;
       --base)
         BASE_BRANCH="$2"
+        BASE_BRANCH_EXPLICIT=1
         shift 2
         ;;
       --task)
         TASK_TEXT="$2"
+        shift 2
+        ;;
+      --task-file|-f)
+        TASK_FILE="$2"
         shift 2
         ;;
       --strategy)
@@ -212,7 +227,7 @@ main() {
     implement)
       local repo sid task
       repo="$(resolve_repo)"
-      task="${TASK_TEXT:-Implement the requested change}"
+      task="$(resolve_task_inputs "$repo" "$TASK_TEXT" "$TASK_FILE" "$BASE_BRANCH_EXPLICIT")"
       if [[ -n "${SESSION_ARG:-}" ]]; then
         sid="$SESSION_ARG"
       else
@@ -244,7 +259,7 @@ main() {
     run)
       local repo sid task
       repo="$(resolve_repo)"
-      task="${TASK_TEXT:-Implement the requested change}"
+      task="$(resolve_task_inputs "$repo" "$TASK_TEXT" "$TASK_FILE" "$BASE_BRANCH_EXPLICIT")"
       sid="$(session_create "$repo" "$task" "$BASE_BRANCH")"
       implement_phase "$repo" "$sid" "$task" "$BASE_BRANCH"
       review_phase "$repo" "$sid"

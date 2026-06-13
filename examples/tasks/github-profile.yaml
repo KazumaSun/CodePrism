@@ -1,0 +1,14 @@
+# CodePrism task file — YAML format
+# Usage: codeprism run --task-file examples/tasks/github-profile.yaml --repo .
+
+title: GitHub プロフィール README
+base: main
+
+task: |
+  GitHub プロフィール用 README.md を作成・更新してください。
+
+  要件:
+  - 日本語メイン、見出しは英語でも可
+  - 自己紹介、主要リポジトリリンク、技術スタック（バッジ）
+  - 変更は README.md のみ
+  - Melchior: 正確性 / Balthasar: 保守性 / Caspar: 軽量さ

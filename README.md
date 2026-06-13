@@ -48,7 +48,53 @@ codeprism --dry-run implement --task "Try it" --repo .
 | `tmux` | 4-pane tmux layout for main + three agents |
 | `clean` | Remove worktrees for `--session` |
 
-Global flags: `--dry-run`, `--session`, `--repo`, `--base`, `--task`.
+Global flags: `--dry-run`, `--session`, `--repo`, `--base`, `--task`, `--task-file` / `-f`.
+
+## Task files (YAML / Markdown)
+
+Long tasks can live in a file instead of `--task "..."`.
+
+```bash
+# Explicit file
+codeprism run --task-file examples/tasks/github-profile.md --repo /path/to/KazumaSun
+
+# Shorthand
+codeprism run -f .codeprism/task.yaml --repo .
+
+# Default: if no --task / --task-file, reads (first match):
+#   .codeprism/task.md  |  .codeprism/task.yaml  |  .codeprism/task.yml
+codeprism run --repo .
+```
+
+`codeprism init` copies `examples/tasks/.codeprism.task.example.yaml` → `.codeprism/task.yaml` for editing.
+
+### YAML format
+
+```yaml
+title: Short label for logs
+base: main          # optional; overrides default base unless you pass --base
+
+task: |
+  Multiline prompt for all three agents.
+```
+
+`prompt:` is an alias for `task:`.
+
+### Markdown format
+
+Optional YAML frontmatter + body (body is the task if `task:` is omitted):
+
+```markdown
+---
+title: My feature
+base: main
+---
+
+# Instructions
+Write the full task description here.
+```
+
+See [examples/tasks/](examples/tasks/) for samples.
 
 ## Configuration
 

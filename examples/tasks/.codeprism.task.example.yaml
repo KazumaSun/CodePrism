@@ -1,0 +1,8 @@
+# Copy to your target repo as .codeprism/task.yaml (optional default task)
+
+title: My feature
+base: main
+
+task: |
+  Describe what the three agents should implement here.
+  Use multiline text for requirements, acceptance criteria, and constraints.
