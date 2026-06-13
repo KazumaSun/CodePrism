@@ -38,15 +38,26 @@ synthesize_phase() {
     REVIEWS "$reviews"
   local prompt
   prompt="$(<"$prompt_file")"
-  run_agent "$backend" "$prompt" "$repo" "$CONFIG_AGENT_MODEL" "$session_dir" "synthesize"
   local out="${session_dir}/SYNTHESIS.md"
-  if [[ "$backend" == "manual" && "$DRY_RUN" != "1" ]]; then
+  local raw_out="${session_dir}/synthesize-agent-raw.txt"
+  if [[ "$DRY_RUN" == "1" ]]; then
+    run_agent "$backend" "$prompt" "$repo" "$CONFIG_AGENT_MODEL" "$session_dir" "synthesize" "$raw_out"
+    return 0
+  fi
+  if [[ "$backend" == "manual" ]]; then
+    run_agent "$backend" "$prompt" "$repo" "$CONFIG_AGENT_MODEL" "$session_dir" "synthesize"
     log_info "Manual synthesis: edit $out after running prompt"
     [[ -f "$out" ]] || echo "# SYNTHESIS (pending manual run)" >"$out"
-  elif [[ "$DRY_RUN" != "1" ]]; then
-    echo "# SYNTHESIS" >"$out"
-    echo "" >>"$out"
-    echo "See synthesize prompt and agent output in session dir." >>"$out"
+  else
+    run_agent "$backend" "$prompt" "$repo" "$CONFIG_AGENT_MODEL" "$session_dir" "synthesize" "$raw_out"
+    if [[ -f "$raw_out" ]] && agent_format_output "$raw_out" "$out"; then
+      log_info "Wrote synthesis to $out"
+    else
+      echo "# SYNTHESIS" >"$out"
+      echo "" >>"$out"
+      echo "Agent output could not be parsed. See ${raw_out} and synthesize.prompt.md." >>"$out"
+      log_warn "Synthesis output missing or empty; placeholder written to $out"
+    fi
   fi
   log_info "Synthesize phase complete for session $sid (rapporteur=$rapporteur)"
 }

@@ -60,7 +60,7 @@ codeprism review --session <id>
 ## セッションの場所
 
 - メタデータ: `your-repo/.codeprism/sessions/<id>/`
-- Worktree: `../.codeprism-worktrees/<id>/<agent>/`
+- Worktree: `.codeprism-worktrees/<id>/<agent>/`（プロジェクト直下）
 
 ## 制限事項
 

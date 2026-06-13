@@ -110,7 +110,7 @@ Defaults live in `config/default.yaml`. Per-repo overrides: `.codeprism.yaml` (s
 
 For session `<id>` and agent `<name>`:
 
-- Worktree: `../.codeprism-worktrees/<id>/<name>/` (sibling of repo root)
+- Worktree: `<repo>/.codeprism-worktrees/<id>/<name>/` (inside the target repo)
 - Branch: `codeprism/<id>/<name>`
 - Session data: `<repo>/.codeprism/sessions/<id>/` (`meta.json`, `worktrees.json`, diffs, prompts)
 

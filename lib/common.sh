@@ -74,11 +74,15 @@ for line in lines:
         continue
     m = re.match(r"^  (\w+):\s*(.+)$", line)
     if m and cur_section:
-        data[cur_section][m.group(1)] = m.group(2).strip().strip('"').strip("'")
+        val = m.group(2).strip().strip('"').strip("'")
+        val = re.split(r"\s+#", val, maxsplit=1)[0].strip()
+        data[cur_section][m.group(1)] = val
         continue
     m = re.match(r"^(\w+):\s*(.+)$", line)
     if m:
-        data[m.group(1)] = m.group(2).strip().strip('"').strip("'")
+        val = m.group(2).strip().strip('"').strip("'")
+        val = re.split(r"\s+#", val, maxsplit=1)[0].strip()
+        data[m.group(1)] = val
 if len(parts) == 1:
     v = data.get(parts[0])
     if isinstance(v, dict):

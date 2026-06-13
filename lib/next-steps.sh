@@ -31,7 +31,7 @@ _print_worktree_paths() {
   local wt_json agent path
   wt_json="$(session_load_worktrees "$repo" "$sid")"
   for agent in "${AGENTS[@]}"; do
-    path="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get(sys.argv[1],""))' "$agent" <<<"$wt_json")"
+    path="$(worktree_path_from_json "$wt_json" "$agent")"
     [[ -n "$path" ]] || continue
     echo "   ${agent}: ${path}" >&2
   done
@@ -89,6 +89,7 @@ print_next_steps() {
 
       echo "" >&2
       echo "4) Apply one agent branch with cherry-pick (default):" >&2
+      echo "   # Worktree changes are auto-committed before apply" >&2
       for agent in "${AGENTS[@]}"; do
         echo "   codeprism apply --session ${sid} --agent ${agent} ${repo_flag}" >&2
       done
@@ -126,7 +127,7 @@ print_next_steps() {
         echo "   codeprism collect --session ${sid} ${repo_flag}" >&2
         step=$((step + 1))
       else
-        echo "Implement phase finished." >&2
+        echo "Implement phase finished (agent changes auto-committed in worktrees)." >&2
         echo "" >&2
         echo "${step}) Inspect worktrees:" >&2
         _print_worktree_paths "$repo" "$sid"

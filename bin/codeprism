@@ -89,7 +89,13 @@ cmd_init() {
     log_info "[dry-run] would mkdir ${repo}/.codeprism/sessions"
     return 0
   fi
-  mkdir -p "${repo}/.codeprism/sessions"
+  mkdir -p "${repo}/.codeprism/sessions" "${repo}/.codeprism-worktrees"
+  if [[ -f "${repo}/.gitignore" ]]; then
+    if ! grep -qxF '.codeprism-worktrees/' "${repo}/.gitignore" 2>/dev/null; then
+      printf '\n.codeprism-worktrees/\n' >>"${repo}/.gitignore"
+      log_info "Added .codeprism-worktrees/ to ${repo}/.gitignore"
+    fi
+  fi
   if [[ ! -f "${repo}/.codeprism.yaml" ]]; then
     cp "${CODEPRISM_ROOT}/.codeprism.example.yaml" "${repo}/.codeprism.yaml"
     log_info "Wrote ${repo}/.codeprism.yaml"
@@ -144,7 +150,7 @@ cmd_clean() {
   wt_json="$(session_load_worktrees "$repo" "$sid")"
   local agent path
   for agent in "${AGENTS[@]}"; do
-    path="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get(sys.argv[1],""))' "$agent" <<<"$wt_json")"
+    path="$(worktree_path_from_json "$wt_json" "$agent")"
     [[ -n "$path" ]] && worktree_remove_for_agent "$repo" "$path"
   done
   log_info "Cleaned worktrees for session $sid"

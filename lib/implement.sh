@@ -21,7 +21,7 @@ implement_phase() {
   local pids=()
   local agent persona_path wt_path branch prompt_file prompt
   for agent in "${AGENTS[@]}"; do
-    wt_path="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get(sys.argv[1],""))' "$agent" <<<"$wt_json")"
+    wt_path="$(worktree_path_from_json "$wt_json" "$agent")"
     persona_path="$(persona_path_for_agent "$agent" "$repo")"
     branch="$(agent_branch_name "$sid" "$agent")"
     prompt_file="${session_dir}/implement-${agent}.prompt.md"
@@ -48,6 +48,9 @@ implement_phase() {
     for pid in "${pids[@]}"; do
       wait "$pid" || log_warn "Agent process $pid exited non-zero"
     done
+    if [[ "$backend" != "manual" ]]; then
+      worktree_commit_all "$repo" "$sid" "implement"
+    fi
   fi
   log_info "Implement phase complete for session $sid (backend=$backend)"
 }

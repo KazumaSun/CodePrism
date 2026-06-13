@@ -9,7 +9,7 @@ CodePrism orchestrates three persona-driven agents (Melchior, Balthasar, Caspar)
 | CLI | `bin/codeprism` | Command dispatch, flag parsing |
 | Config | `config/default.yaml`, repo `.codeprism.yaml` | Personas, backend, review, synthesis |
 | Session | `.codeprism/sessions/<id>/` | `meta.json`, prompts, diffs, `SYNTHESIS.md` |
-| Worktrees | `../.codeprism-worktrees/<session>/<agent>/` | Isolated implementations |
+| Worktrees | `.codeprism-worktrees/<session>/<agent>/` | Isolated implementations |
 | Branches | `codeprism/<session>/<agent>` | Per-agent git branches |
 | Agents | `lib/agent.sh` | cursor-cli, cursor-sdk, or manual |
 
