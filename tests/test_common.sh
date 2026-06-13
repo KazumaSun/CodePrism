@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
+# shellcheck shell=bash
+# shellcheck source-path=SCRIPTDIR/..
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export CODEPRISM_ROOT="$ROOT"
-# shellcheck source=../lib/common.sh
+# shellcheck source=lib/common.sh
 source "${ROOT}/lib/common.sh"
 
 check_deps

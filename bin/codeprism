@@ -1,24 +1,26 @@
 #!/usr/bin/env bash
+# shellcheck shell=bash
+# shellcheck source-path=SCRIPTDIR/..
 set -euo pipefail
 
 CODEPRISM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 export CODEPRISM_ROOT
 
-# shellcheck source=../lib/common.sh
+# shellcheck source=lib/common.sh
 source "${CODEPRISM_ROOT}/lib/common.sh"
-# shellcheck source=../lib/session.sh
+# shellcheck source=lib/session.sh
 source "${CODEPRISM_ROOT}/lib/session.sh"
-# shellcheck source=../lib/worktree.sh
+# shellcheck source=lib/worktree.sh
 source "${CODEPRISM_ROOT}/lib/worktree.sh"
-# shellcheck source=../lib/agent.sh
+# shellcheck source=lib/agent.sh
 source "${CODEPRISM_ROOT}/lib/agent.sh"
-# shellcheck source=../lib/implement.sh
+# shellcheck source=lib/implement.sh
 source "${CODEPRISM_ROOT}/lib/implement.sh"
-# shellcheck source=../lib/review.sh
+# shellcheck source=lib/review.sh
 source "${CODEPRISM_ROOT}/lib/review.sh"
-# shellcheck source=../lib/synthesize.sh
+# shellcheck source=lib/synthesize.sh
 source "${CODEPRISM_ROOT}/lib/synthesize.sh"
-# shellcheck source=../lib/apply.sh
+# shellcheck source=lib/apply.sh
 source "${CODEPRISM_ROOT}/lib/apply.sh"
 
 usage() {
@@ -144,7 +146,7 @@ cmd_tmux() {
 
 main() {
   check_deps
-  local cmd=""
+  local subcommand=""
   REPO_ARG=""
   SESSION_ARG=""
   BASE_BRANCH="${BASE_BRANCH:-main}"
@@ -188,7 +190,7 @@ main() {
         shift 2
         ;;
       init|run|implement|review|synthesize|apply|status|collect|tmux|clean)
-        cmd="$1"
+        subcommand="$1"
         shift
         ;;
       *)
@@ -197,9 +199,9 @@ main() {
     esac
   done
 
-  [[ -n "$cmd" ]] || { usage; exit 1; }
+  [[ -n "$subcommand" ]] || { usage; exit 1; }
 
-  case "$cmd" in
+  case "$subcommand" in
     init) cmd_init ;;
     status) cmd_status ;;
     collect)

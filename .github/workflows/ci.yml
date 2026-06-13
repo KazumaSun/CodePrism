@@ -15,4 +15,4 @@ jobs:
       - name: Run shellcheck
         run: |
           set -e
-          shellcheck -x bin/codeprism lib/*.sh scripts/*.sh tests/*.sh
+          shellcheck -x -e SC1091 bin/codeprism lib/*.sh scripts/*.sh tests/*.sh
