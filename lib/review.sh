@@ -6,7 +6,7 @@ review_label_for() {
   local target="$2"
   local -a order=(melchior balthasar caspar)
   local -a labels=(alpha beta gamma)
-  local i j
+  local i
   for i in "${!order[@]}"; do
     if [[ "${order[$i]}" == "$target" ]]; then
       echo "${labels[$i]}"

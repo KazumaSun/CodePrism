@@ -52,7 +52,8 @@ run_agent() {
         --prompt "$prompt"
       ;;
     manual)
-      local out="${session_dir}/manual-${label}-$(date +%Y%m%d-%H%M%S).md"
+      local out
+      out="${session_dir}/manual-${label}-$(date +%Y%m%d-%H%M%S).md"
       if [[ "$DRY_RUN" == "1" ]]; then
         log_info "[dry-run] would write manual prompt to $out"
         return 0

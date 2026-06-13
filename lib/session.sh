@@ -111,5 +111,5 @@ session_latest() {
   local repo="$1"
   local base="${repo}/.codeprism/sessions"
   [[ -d "$base" ]] || return 1
-  ls -1t "$base" 2>/dev/null | head -1
+  find "$base" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; 2>/dev/null | sort -r | head -1
 }
