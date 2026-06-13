@@ -1,0 +1,9 @@
+{
+  "name": "codeprism-cursor-sdk-runner",
+  "private": true,
+  "type": "module",
+  "description": "Optional @cursor/sdk runner for CodePrism",
+  "dependencies": {
+    "@cursor/sdk": "^0.1.0"
+  }
+}

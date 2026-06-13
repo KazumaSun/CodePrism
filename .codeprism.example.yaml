@@ -1,0 +1,19 @@
+# Copy to your target repo as .codeprism.yaml (optional overrides)
+
+personas:
+  melchior: config/personas/melchior.md
+  balthasar: config/personas/balthasar.md
+  caspar: config/personas/caspar.md
+
+agent:
+  backend: auto   # auto | cursor-cli | cursor-sdk | manual
+  model: composer-2.5
+
+review:
+  anonymize: true
+
+synthesis:
+  rapporteur: melchior
+
+worktree:
+  prefix: codeprism

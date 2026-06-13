@@ -1,0 +1,255 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CODEPRISM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export CODEPRISM_ROOT
+
+# shellcheck source=../lib/common.sh
+source "${CODEPRISM_ROOT}/lib/common.sh"
+# shellcheck source=../lib/session.sh
+source "${CODEPRISM_ROOT}/lib/session.sh"
+# shellcheck source=../lib/worktree.sh
+source "${CODEPRISM_ROOT}/lib/worktree.sh"
+# shellcheck source=../lib/agent.sh
+source "${CODEPRISM_ROOT}/lib/agent.sh"
+# shellcheck source=../lib/implement.sh
+source "${CODEPRISM_ROOT}/lib/implement.sh"
+# shellcheck source=../lib/review.sh
+source "${CODEPRISM_ROOT}/lib/review.sh"
+# shellcheck source=../lib/synthesize.sh
+source "${CODEPRISM_ROOT}/lib/synthesize.sh"
+# shellcheck source=../lib/apply.sh
+source "${CODEPRISM_ROOT}/lib/apply.sh"
+
+usage() {
+  cat <<USAGE
+CodePrism — MAGI-style 3-agent dev orchestrator for Cursor
+
+Usage: codeprism <command> [options]
+
+Commands:
+  init              Create .codeprism in target repo
+  run               Full pipeline: implement → review → synthesize
+  implement         Parallel implement phase (melchior, balthasar, caspar)
+  review            3×2 cross review with optional anonymization
+  synthesize        Rapporteur synthesis → SYNTHESIS.md
+  apply             Cherry-pick or merge chosen agent branch into repo
+  status            Show session / worktree status
+  collect           Snapshot diffs from worktrees (after manual work)
+  tmux              Launch 4-pane tmux layout helper
+  clean             Remove session worktrees (optional session id)
+
+Options:
+  --dry-run         Log actions without executing
+  --session <id>    Session id (default: latest)
+  --repo <path>     Target git repository (default: cwd)
+  --base <branch>   Base branch for worktrees (default: main)
+  --task <text>     Task description (run/implement)
+  --strategy <s>    apply: cherry-pick | merge (default: cherry-pick)
+  --agent <name>    apply: melchior | balthasar | caspar
+  -h, --help        Show this help
+
+Environment:
+  DRY_RUN=1         Same as --dry-run
+  CURSOR_API_KEY    Enables cursor-sdk backend when auto
+
+USAGE
+}
+
+resolve_repo() {
+  local r="${REPO_ARG:-}"
+  if [[ -z "$r" ]]; then
+    r="$(pwd)"
+  fi
+  [[ -d "$r/.git" || -f "$r/.git" ]] || die "Not a git repo: $r"
+  (cd "$r" && pwd)
+}
+
+resolve_session() {
+  local repo="$1"
+  if [[ -n "${SESSION_ARG:-}" ]]; then
+    echo "$SESSION_ARG"
+    return 0
+  fi
+  session_latest "$repo" || die "No session found; pass --session or run implement first"
+}
+
+cmd_init() {
+  local repo
+  repo="$(resolve_repo)"
+  if [[ "$DRY_RUN" == "1" ]]; then
+    log_info "[dry-run] would mkdir ${repo}/.codeprism/sessions"
+    return 0
+  fi
+  mkdir -p "${repo}/.codeprism/sessions"
+  if [[ ! -f "${repo}/.codeprism.yaml" ]]; then
+    cp "${CODEPRISM_ROOT}/.codeprism.example.yaml" "${repo}/.codeprism.yaml"
+    log_info "Wrote ${repo}/.codeprism.yaml"
+  fi
+  log_info "Initialized CodePrism in $repo"
+}
+
+cmd_status() {
+  local repo sid
+  repo="$(resolve_repo)"
+  load_merged_config "$repo"
+  if [[ -n "${SESSION_ARG:-}" ]]; then
+    sid="$SESSION_ARG"
+  elif [[ -d "${repo}/.codeprism/sessions" ]]; then
+    sid="$(session_latest "$repo" 2>/dev/null || true)"
+  fi
+  echo "repo: $repo"
+  echo "backend: $(detect_agent_backend "$CONFIG_AGENT_BACKEND")"
+  echo "model: $CONFIG_AGENT_MODEL"
+  if [[ -n "${sid:-}" ]]; then
+    echo "session: $sid"
+    echo "meta: $(session_meta_path "$repo" "$sid")"
+    cat "$(session_meta_path "$repo" "$sid")" 2>/dev/null || true
+    echo "worktrees: $(session_worktrees_path "$repo" "$sid")"
+    cat "$(session_worktrees_path "$repo" "$sid")" 2>/dev/null || true
+  else
+    echo "session: (none)"
+  fi
+}
+
+cmd_collect() {
+  local repo sid
+  repo="$(resolve_repo)"
+  sid="$(resolve_session "$repo")"
+  worktree_collect_all "$repo" "$sid"
+  log_info "Collected diffs for session $sid"
+}
+
+cmd_clean() {
+  local repo sid
+  repo="$(resolve_repo)"
+  if [[ -n "${SESSION_ARG:-}" ]]; then
+    sid="$SESSION_ARG"
+  else
+    die "clean requires --session <id>"
+  fi
+  local wt_json
+  wt_json="$(session_load_worktrees "$repo" "$sid")"
+  local agent path
+  for agent in "${AGENTS[@]}"; do
+    path="$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(d.get(sys.argv[1],""))' "$agent" <<<"$wt_json")"
+    [[ -n "$path" ]] && worktree_remove_for_agent "$repo" "$path"
+  done
+  log_info "Cleaned worktrees for session $sid"
+}
+
+cmd_tmux() {
+  bash "${CODEPRISM_ROOT}/scripts/tmux-layout.sh" "${REPO_ARG:-$(pwd)}"
+}
+
+main() {
+  check_deps
+  local cmd=""
+  REPO_ARG=""
+  SESSION_ARG=""
+  BASE_BRANCH="${BASE_BRANCH:-main}"
+  TASK_TEXT=""
+  APPLY_STRATEGY="cherry-pick"
+  APPLY_AGENT="melchior"
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      --dry-run)
+        DRY_RUN=1
+        export DRY_RUN
+        shift
+        ;;
+      --repo)
+        REPO_ARG="$2"
+        shift 2
+        ;;
+      --session)
+        SESSION_ARG="$2"
+        shift 2
+        ;;
+      --base)
+        BASE_BRANCH="$2"
+        shift 2
+        ;;
+      --task)
+        TASK_TEXT="$2"
+        shift 2
+        ;;
+      --strategy)
+        APPLY_STRATEGY="$2"
+        shift 2
+        ;;
+      --agent)
+        APPLY_AGENT="$2"
+        shift 2
+        ;;
+      init|run|implement|review|synthesize|apply|status|collect|tmux|clean)
+        cmd="$1"
+        shift
+        ;;
+      *)
+        die "Unknown argument: $1 (try --help)"
+        ;;
+    esac
+  done
+
+  [[ -n "$cmd" ]] || { usage; exit 1; }
+
+  case "$cmd" in
+    init) cmd_init ;;
+    status) cmd_status ;;
+    collect)
+      cmd_collect
+      ;;
+    clean) cmd_clean ;;
+    tmux) cmd_tmux ;;
+    implement)
+      local repo sid task
+      repo="$(resolve_repo)"
+      task="${TASK_TEXT:-Implement the requested change}"
+      if [[ -n "${SESSION_ARG:-}" ]]; then
+        sid="$SESSION_ARG"
+      else
+        sid="$(session_create "$repo" "$task" "$BASE_BRANCH")"
+        SESSION_ARG="$sid"
+      fi
+      implement_phase "$repo" "$sid" "$task" "$BASE_BRANCH"
+      echo "$sid"
+      ;;
+    review)
+      local repo sid
+      repo="$(resolve_repo)"
+      sid="$(resolve_session "$repo")"
+      review_phase "$repo" "$sid"
+      ;;
+    synthesize)
+      local repo sid task
+      repo="$(resolve_repo)"
+      sid="$(resolve_session "$repo")"
+      task="$(json_get "$(session_load_meta "$repo" "$sid")" task 2>/dev/null || echo "")"
+      synthesize_phase "$repo" "$sid" "${TASK_TEXT:-$task}"
+      ;;
+    apply)
+      local repo sid
+      repo="$(resolve_repo)"
+      sid="$(resolve_session "$repo")"
+      apply_phase "$repo" "$sid" "$APPLY_STRATEGY" "$APPLY_AGENT"
+      ;;
+    run)
+      local repo sid task
+      repo="$(resolve_repo)"
+      task="${TASK_TEXT:-Implement the requested change}"
+      sid="$(session_create "$repo" "$task" "$BASE_BRANCH")"
+      implement_phase "$repo" "$sid" "$task" "$BASE_BRANCH"
+      review_phase "$repo" "$sid"
+      synthesize_phase "$repo" "$sid" "$task"
+      echo "$sid"
+      ;;
+  esac
+}
+
+main "$@"

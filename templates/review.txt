@@ -1,0 +1,18 @@
+# CodePrism — Cross Review
+
+## Session: {{SESSION_ID}}
+## Reviewer persona: {{REVIEWER_PERSONA}}
+## Target implementation label: {{TARGET_LABEL}}
+
+You are reviewing an anonymized diff from another agent. Do not guess author identity.
+
+## Diff
+{{DIFF}}
+
+## Required output (markdown)
+1. Summary (2-3 sentences)
+2. Strengths
+3. Issues (severity: blocker / major / minor)
+4. Verdict: approve | request_changes
+5. Suggested follow-ups
+

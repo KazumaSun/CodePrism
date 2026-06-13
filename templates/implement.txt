@@ -1,0 +1,22 @@
+# CodePrism — Implement Phase
+
+## Session
+- ID: {{SESSION_ID}}
+- Agent: {{AGENT_NAME}}
+- Persona: {{PERSONA}}
+
+## Task
+{{TASK}}
+
+## Repository context
+- Repo: {{REPO_PATH}}
+- Base branch: {{BASE_BRANCH}}
+- Worktree: {{WORKTREE_PATH}}
+- Branch: {{BRANCH}}
+
+## Instructions
+1. Work only inside the assigned worktree.
+2. Follow your persona mandate above.
+3. Commit logical units with clear messages.
+4. When done, ensure `git status` is clean or only contains intentional WIP.
+

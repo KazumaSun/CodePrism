@@ -1,0 +1,108 @@
+# CodePrism
+
+**MAGI-style 3-agent dev orchestrator for Cursor** — run Melchior, Balthasar, and Caspar in parallel git worktrees, cross-review each other's work, and synthesize a single plan.
+
+Inspired by the three MAGI supercomputers (correctness, diversity of approach, and operational wisdom), CodePrism splits implementation concerns across three personas before merging insight through a designated rapporteur.
+
+## Concept
+
+| Agent | Persona | Focus |
+|-------|---------|--------|
+| **Melchior** | Correctness | Requirements, tests, regression, edge cases |
+| **Balthasar** | Sustainability | Maintainability, conventions, minimal diffs |
+| **Caspar** | Performance & ops | Efficiency, resource use, operational cost |
+
+Pipeline: **implement** (parallel) → **review** (3×2 cross-review, optional anonymization) → **synthesize** (`SYNTHESIS.md`) → **apply** (optional cherry-pick/merge).
+
+## Quickstart
+
+```bash
+git clone <this-repo> CodePrism
+cd CodePrism
+./scripts/install.sh
+export PATH="$(pwd)/bin:$PATH"
+
+cd /path/to/your-project
+codeprism init
+codeprism run --task "Add feature X" --base main
+```
+
+Dry-run without side effects:
+
+```bash
+codeprism --dry-run implement --task "Try it" --repo .
+```
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `init` | Create `.codeprism/` and example `.codeprism.yaml` in target repo |
+| `run` | Full pipeline: implement → review → synthesize |
+| `implement` | Create worktrees and run three agents in parallel |
+| `review` | Collect diffs and run cross reviews |
+| `synthesize` | Rapporteur produces synthesis |
+| `apply` | Apply chosen agent branch (`--strategy cherry-pick\|merge`, `--agent`) |
+| `status` | Session metadata and backend detection |
+| `collect` | Snapshot worktree diffs (after manual edits) |
+| `tmux` | 4-pane tmux layout for main + three agents |
+| `clean` | Remove worktrees for `--session` |
+
+Global flags: `--dry-run`, `--session`, `--repo`, `--base`, `--task`.
+
+## Configuration
+
+Defaults live in `config/default.yaml`. Per-repo overrides: `.codeprism.yaml` (see `.codeprism.example.yaml`).
+
+- `agent.backend`: `auto` | `cursor-cli` | `cursor-sdk` | `manual`
+- `agent.model`: e.g. `composer-2.5`
+- `review.anonymize`: `true` hides agent names in review targets
+- `synthesis.rapporteur`: default `melchior`
+- `worktree.prefix`: branch prefix (default `codeprism`)
+
+## Worktrees & branches
+
+For session `<id>` and agent `<name>`:
+
+- Worktree: `../.codeprism-worktrees/<id>/<name>/` (sibling of repo root)
+- Branch: `codeprism/<id>/<name>`
+- Session data: `<repo>/.codeprism/sessions/<id>/` (`meta.json`, `worktrees.json`, diffs, prompts)
+
+## Agent backends
+
+**Auto** (default):
+
+1. **cursor-cli** — `cursor agent -p` with `--workspace`; uses `--output-format json` when supported
+2. **cursor-sdk** — `optional/sdk/run.mjs` when `CURSOR_API_KEY` is set
+3. **manual** — writes prompts under the session dir for human execution; use `codeprism collect` afterward
+
+### Optional SDK
+
+```bash
+cd optional/sdk && npm install
+export CURSOR_API_KEY=...
+```
+
+## tmux & Warp
+
+```bash
+codeprism tmux --repo /path/to/project
+```
+
+Opens a tiled session: main pane + three agent shells. In Warp or other terminals, open the worktree paths from `codeprism status`.
+
+## Limitations
+
+- Lightweight YAML parsing (not a full YAML engine).
+- Agent output quality depends on Cursor model and your task description.
+- `apply` assumes a clean merge/cherry-pick context; resolve conflicts manually.
+- CI runs `shellcheck` on shell sources; runtime tests are minimal.
+
+## Docs
+
+- [Architecture](docs/architecture.md)
+- [ワークフロー（日本語）](docs/workflow-ja.md)
+
+## License
+
+MIT — see [LICENSE](LICENSE).

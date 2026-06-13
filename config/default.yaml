@@ -1,0 +1,17 @@
+personas:
+  melchior: config/personas/melchior.md
+  balthasar: config/personas/balthasar.md
+  caspar: config/personas/caspar.md
+
+agent:
+  backend: auto
+  model: composer-2.5
+
+review:
+  anonymize: true
+
+synthesis:
+  rapporteur: melchior
+
+worktree:
+  prefix: codeprism

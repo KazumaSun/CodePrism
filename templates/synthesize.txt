@@ -1,0 +1,23 @@
+# CodePrism — Synthesis (Rapporteur)
+
+## Session: {{SESSION_ID}}
+## Rapporteur: {{RAPPORTEUR}}
+
+## Task
+{{TASK}}
+
+## Implementations (summaries)
+{{IMPLEMENTATION_SUMMARIES}}
+
+## Cross reviews
+{{REVIEWS}}
+
+## Your job
+Produce a single coherent plan:
+1. Recommended approach (which ideas to keep/merge)
+2. Conflicts and resolutions
+3. Final implementation checklist
+4. Risk register
+
+Write the result as SYNTHESIS.md in the session directory.
+
