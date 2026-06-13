@@ -24,6 +24,8 @@ source "${CODEPRISM_ROOT}/lib/synthesize.sh"
 source "${CODEPRISM_ROOT}/lib/apply.sh"
 # shellcheck source=lib/task.sh
 source "${CODEPRISM_ROOT}/lib/task.sh"
+# shellcheck source=lib/next-steps.sh
+source "${CODEPRISM_ROOT}/lib/next-steps.sh"
 
 usage() {
   cat <<USAGE
@@ -235,6 +237,7 @@ main() {
         SESSION_ARG="$sid"
       fi
       implement_phase "$repo" "$sid" "$task" "$BASE_BRANCH"
+      print_next_steps "$repo" "$sid" implement
       echo "$sid"
       ;;
     review)
@@ -242,6 +245,7 @@ main() {
       repo="$(resolve_repo)"
       sid="$(resolve_session "$repo")"
       review_phase "$repo" "$sid"
+      print_next_steps "$repo" "$sid" review
       ;;
     synthesize)
       local repo sid task
@@ -249,12 +253,14 @@ main() {
       sid="$(resolve_session "$repo")"
       task="$(json_get "$(session_load_meta "$repo" "$sid")" task 2>/dev/null || echo "")"
       synthesize_phase "$repo" "$sid" "${TASK_TEXT:-$task}"
+      print_next_steps "$repo" "$sid" synthesize
       ;;
     apply)
       local repo sid
       repo="$(resolve_repo)"
       sid="$(resolve_session "$repo")"
       apply_phase "$repo" "$sid" "$APPLY_STRATEGY" "$APPLY_AGENT"
+      print_next_steps "$repo" "$sid" apply
       ;;
     run)
       local repo sid task
@@ -264,6 +270,7 @@ main() {
       implement_phase "$repo" "$sid" "$task" "$BASE_BRANCH"
       review_phase "$repo" "$sid"
       synthesize_phase "$repo" "$sid" "$task"
+      print_next_steps "$repo" "$sid" run
       echo "$sid"
       ;;
   esac
