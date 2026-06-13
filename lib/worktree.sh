@@ -45,7 +45,7 @@ worktree_create_for_agent() {
     if [[ -d "$wt_path" ]]; then
       log_warn "Worktree already exists: $wt_path"
     else
-      git worktree add "$wt_path" "$branch"
+      git worktree add "$wt_path" "$branch" >&2
     fi
   )
   echo "$wt_path"

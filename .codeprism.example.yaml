@@ -6,7 +6,7 @@ personas:
   caspar: config/personas/caspar.md
 
 agent:
-  backend: auto   # auto | cursor-cli | cursor-sdk | manual
+  backend: auto
   model: composer-2.5
 
 review:

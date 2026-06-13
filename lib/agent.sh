@@ -29,6 +29,9 @@ run_agent() {
   case "$backend" in
     cursor-cli)
       local -a cmd=(cursor agent -p "$prompt" --workspace "$workspace")
+      if cursor agent --help 2>&1 | grep -q -- '--trust'; then
+        cmd+=(--trust)
+      fi
       if cursor agent --help 2>&1 | grep -q output-format; then
         cmd+=(--output-format json)
       fi
